@@ -67,5 +67,4 @@ public class TestIds {
             sqlSession.close();
         }
     }
-
 }

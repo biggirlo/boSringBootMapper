@@ -26,6 +26,7 @@ package tk.mybatis.mapper.common.base;
 
 import tk.mybatis.mapper.common.base.insert.InsertMapper;
 import tk.mybatis.mapper.common.base.insert.InsertSelectiveMapper;
+import tk.mybatis.mapper.common.special.InsertListMapper;
 
 /**
  * 通用Mapper接口,基础查询
@@ -35,6 +36,7 @@ import tk.mybatis.mapper.common.base.insert.InsertSelectiveMapper;
  */
 public interface BaseInsertMapper<T> extends
         InsertMapper<T>,
-        InsertSelectiveMapper<T> {
+        InsertSelectiveMapper<T> ,
+        InsertListMapper<T>{
 
 }

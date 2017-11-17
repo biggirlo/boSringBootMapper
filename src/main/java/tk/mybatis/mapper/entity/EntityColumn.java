@@ -99,6 +99,7 @@ public class EntityColumn {
      */
     public String getColumnHolderWithComma(String entityName, String suffix) {
         return getColumnHolder(entityName, suffix, ",");
+
     }
 
     /**

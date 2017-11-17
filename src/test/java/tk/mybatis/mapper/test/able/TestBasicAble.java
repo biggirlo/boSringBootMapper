@@ -27,9 +27,15 @@ package tk.mybatis.mapper.test.able;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.Test;
+import tk.mybatis.mapper.mapper.CountryMapper;
 import tk.mybatis.mapper.mapper.MybatisHelper;
 import tk.mybatis.mapper.mapper.UserInfoAbleMapper;
+import tk.mybatis.mapper.model.Country;
 import tk.mybatis.mapper.model.UserInfoAble;
+
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.List;
 
 /**
  * 测试增删改查
@@ -118,5 +124,19 @@ public class TestBasicAble {
         }
     }
 
-
+    @Test
+    public void teestDeleteByKeys(){
+        SqlSession sqlSession = MybatisHelper.getSqlSession();
+        try {
+            CountryMapper mapper = sqlSession.getMapper(CountryMapper.class);
+            Country c = new Country();
+            c.setId(1);
+            List<Country> list = new ArrayList<Country>();
+            list.add(c);
+            int count = mapper.deleteList(list);
+        }finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
 }
