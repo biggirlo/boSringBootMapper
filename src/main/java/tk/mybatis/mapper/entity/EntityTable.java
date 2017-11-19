@@ -57,9 +57,12 @@ public class EntityTable {
     private Set<EntityColumn> entityClassColumns;
     //实体类 => 主键信息
     private Set<EntityColumn> entityClassPKColumns;
+    //实体类 =》全部查询条件
+    private Set<EntityColumn> entityClassSearchColumns;
     //useGenerator包含多列的时候需要用到
     private List<String> keyProperties;
     private List<String> keyColumns;
+
     //resultMap对象
     private ResultMap resultMap;
     //类
@@ -267,5 +270,13 @@ public class EntityTable {
         this.name = table.name();
         this.catalog = table.catalog();
         this.schema = table.schema();
+    }
+
+    public Set<EntityColumn> getEntityClassSearchColumns() {
+        return entityClassSearchColumns;
+    }
+
+    public void setEntityClassSearchColumns(Set<EntityColumn> entityClassSearchColumns) {
+        this.entityClassSearchColumns = entityClassSearchColumns;
     }
 }

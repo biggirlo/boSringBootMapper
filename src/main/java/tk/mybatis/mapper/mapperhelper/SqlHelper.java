@@ -496,6 +496,7 @@ public class SqlHelper {
         for (EntityColumn column : columnList) {
             sql.append(getIfNotNull(column, " AND " + column.getColumnEqualsHolder(), empty));
         }
+        sql.append(EntityHelper.getSearchForDataTable(entityClass));
         sql.append("</where>");
         return sql.toString();
     }

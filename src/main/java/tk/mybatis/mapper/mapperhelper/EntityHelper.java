@@ -28,6 +28,7 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.UnknownTypeHandler;
 import tk.mybatis.mapper.MapperException;
 import tk.mybatis.mapper.annotation.ColumnType;
+import tk.mybatis.mapper.annotation.DateSearch;
 import tk.mybatis.mapper.annotation.NameStyle;
 import tk.mybatis.mapper.code.IdentityDialect;
 import tk.mybatis.mapper.code.Style;
@@ -74,6 +75,37 @@ public class EntityHelper {
     }
 
     /**
+     *
+     * @param entityClass
+     * @return
+     */
+    public static String getSearchForDataTable(Class<?> entityClass){
+        Set<EntityColumn> searchColumns = getEntityTable(entityClass).getEntityClassSearchColumns();
+        StringBuilder sql = new StringBuilder();
+        for(EntityColumn column: searchColumns){
+            sql.append("<if test=\"" ).append(column.getProperty());
+            sql.append(column.getProperty()).append(" != null");
+            sql.append(" and ");
+            sql.append(column.getProperty()).append(" != '' ");
+            sql.append("\">");
+            sql.append(" AND ");
+            sql.append(column.getColumn());
+            switch (column.getDateSearchType()){
+                case greater :  sql.append(" > ");break;               //大于
+                case less : sql.append(" < ");break;                   //小于
+                case equal : sql.append(" = ");break;                 //等于
+                case greaterAndLess : sql.append(" <> ");break;      //大于和小于
+                case greaterAndEqual : sql.append(" >= ");break;          //大于和等于
+                case lessAndEqual : sql.append(" <= ");break;          //大于和等于
+                default:sql.append(" = ");break;
+            }
+            sql.append(column.getColumnHolder());
+            sql.append("</if>");
+        }
+        return sql.toString();
+    }
+
+    /**
      * 获取默认的orderby语句
      *
      * @param entityClass
@@ -97,6 +129,7 @@ public class EntityHelper {
         return table.getOrderByClause();
     }
 
+
     /**
      * 获取全部列
      *
@@ -107,6 +140,7 @@ public class EntityHelper {
         return getEntityTable(entityClass).getEntityClassColumns();
     }
 
+
     /**
      * 获取主键信息
      *
@@ -116,6 +150,7 @@ public class EntityHelper {
     public static Set<EntityColumn> getPKColumns(Class<?> entityClass) {
         return getEntityTable(entityClass).getEntityClassPKColumns();
     }
+
 
     /**
      * 获取查询的Select
@@ -228,6 +263,8 @@ public class EntityHelper {
                 continue;
             }
             processField(entityTable, style, field);
+            //初始化datatable的查询列
+            dataTableSearchInif(entityTable,style,field);
         }
         //当pk.size=0的时候使用所有列作为主键
         if (entityTable.getEntityClassPKColumns().size() == 0) {
@@ -238,6 +275,55 @@ public class EntityHelper {
     }
 
     /**
+     * 初始化datatable的查询列
+     * @param entityTable
+     * @param style
+     * @param field
+     */
+    private static void dataTableSearchInif(EntityTable entityTable, Style style, EntityField field){
+        //时间排序
+        //目前只支持mysql
+        if(field.isAnnotationPresent(DateSearch.class)){
+            EntityColumn entityColumn = new EntityColumn(entityTable);
+
+            DateSearch dateSearch = field.getAnnotation(DateSearch.class);
+            entityColumn.setDateSearchType(dateSearch.type());
+
+            //Column
+            String columnName = null;
+            if (field.isAnnotationPresent(Column.class)) {
+                Column column = field.getAnnotation(Column.class);
+                columnName = column.name();
+                entityColumn.setUpdatable(column.updatable());
+                entityColumn.setInsertable(column.insertable());
+            }            //ColumnType
+            if (field.isAnnotationPresent(ColumnType.class)) {
+                ColumnType columnType = field.getAnnotation(ColumnType.class);
+                //column可以起到别名的作用
+                if (StringUtil.isEmpty(columnName) && StringUtil.isNotEmpty(columnType.column())) {
+                    columnName = columnType.column();
+                }
+                if (columnType.jdbcType() != JdbcType.UNDEFINED) {
+                    entityColumn.setJdbcType(columnType.jdbcType());
+                }
+                if (columnType.typeHandler() != UnknownTypeHandler.class) {
+                    entityColumn.setTypeHandler(columnType.typeHandler());
+                }
+            }
+
+            //表名
+            if (StringUtil.isEmpty(columnName)) {
+                columnName = StringUtil.convertByStyle(field.getName(), style);
+            }
+            entityColumn.setProperty(field.getName());
+            entityColumn.setColumn(columnName);
+            entityColumn.setJavaType(field.getJavaType());
+
+            entityTable.getEntityClassSearchColumns().add(entityColumn);
+        }
+    }
+
+    /**
      * 处理一列
      *
      * @param entityTable
@@ -245,6 +331,7 @@ public class EntityHelper {
      * @param field
      */
     private static void processField(EntityTable entityTable, Style style, EntityField field) {
+
         //排除字段
         if (field.isAnnotationPresent(Transient.class)) {
             return;
@@ -276,6 +363,7 @@ public class EntityHelper {
                 entityColumn.setTypeHandler(columnType.typeHandler());
             }
         }
+
         //表名
         if (StringUtil.isEmpty(columnName)) {
             columnName = StringUtil.convertByStyle(field.getName(), style);

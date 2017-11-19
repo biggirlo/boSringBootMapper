@@ -103,12 +103,12 @@ public class BaseDeleteProvider extends MapperTemplate {
         sql.append("delete from ");
         sql.append(table.getName());
         sql.append("<where>");
-        sql.append(" <foreach collection=\"list\" item=\"record\" separator=\"or\" >");
+        sql.append(" <foreach collection=\"list\" item=\"record\" separator=\" or \" >");
         //获取全部列
         Set<EntityColumn> columnList = EntityHelper.getColumns(entityClass);
         //当某个列有主键策略时，不需要考虑他的属性是否为空，因为如果为空，一定会根据主键策略给他生成一个值
         for (EntityColumn column : columnList) {
-            sql.append(SqlHelper.getIfNotNull("record" ,column," " + column.getColumn() + "=" + column.getColumnHolder("record"),isNotEmpty()));
+            sql.append(SqlHelper.getIfNotNull("record" ,column, column.getColumn() + "=" + column.getColumnHolder("record"),isNotEmpty()));
         }
         sql.append("</foreach>");
         sql.append("</where>");
